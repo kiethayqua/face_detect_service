@@ -17,28 +17,43 @@ class People(object):
         self.enc = enc
 
 
-def detect_face(unknown_face_file_path: str):
-    know_faces = []
-    results = []
+know_faces = []
+know_face_encs = []
+
+
+def init():
     for child in pathlib.Path('./data').iterdir():
         face_image = face_recognition.load_image_file('./' + str(child))
         face_name = os.path.splitext(str(child))[0]
         face_image_enc = face_recognition.face_encodings(face_image)[0]
         know_faces.append(People(face_name, face_image_enc))
 
-    unknown_picture = face_recognition.load_image_file(unknown_face_file_path)
-    unknown_face_encs = face_recognition.face_encodings(unknown_picture)
-
     def get_encs():
         res = []
         for i in range(len(know_faces)):
             res.append(know_faces[i].enc)
         return res
-    encs = get_encs()
+
+    global know_face_encs
+    know_face_encs = get_encs()
+
+
+init()
+
+
+def detect_face(unknown_face_file_path: str):
+    results = []
+
+    unknown_picture = face_recognition.load_image_file(unknown_face_file_path)
+    unknown_picture_locations = face_recognition.face_locations(
+        unknown_picture)
+    unknown_face_encs = face_recognition.face_encodings(
+        unknown_picture, unknown_picture_locations)
 
     detected_indexes = []
     for i in range(len(unknown_face_encs)):
-        matches = face_recognition.compare_faces(encs, unknown_face_encs[i])
+        matches = face_recognition.compare_faces(
+            know_face_encs, unknown_face_encs[i])
         if True in matches:
             first_index = matches.index(True)
             if first_index not in detected_indexes:
