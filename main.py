@@ -4,6 +4,7 @@ import face_recognition
 import shutil
 import pathlib
 import os
+import uvicorn
 
 app = FastAPI()
 
@@ -80,3 +81,9 @@ def read_root():
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
+
+
+# this code support serveo.net server
+# ssh -R 80:localhost:3000 serveo.net
+if __name__ == '__main__':
+    uvicorn.run(app, port=3000, host='0.0.0.0')
