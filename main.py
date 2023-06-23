@@ -36,11 +36,14 @@ def detect_face(unknown_face_file_path: str):
         return res
     encs = get_encs()
 
+    detected_indexes = []
     for i in range(len(unknown_face_encs)):
         matches = face_recognition.compare_faces(encs, unknown_face_encs[i])
         if True in matches:
             first_index = matches.index(True)
-            results.append(know_faces[first_index].name)
+            if first_index not in detected_indexes:
+                results.append(know_faces[first_index].name)
+                detected_indexes.append(first_index)
 
     return results
 
