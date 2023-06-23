@@ -1,10 +1,11 @@
-from typing import Union
 from fastapi import FastAPI, File, UploadFile
 import face_recognition
 import shutil
 import pathlib
 import os
 import uvicorn
+import cv2
+import numpy as np
 
 app = FastAPI()
 
@@ -45,21 +46,34 @@ init()
 def detect_face(unknown_face_file_path: str):
     results = []
 
-    unknown_picture = face_recognition.load_image_file(unknown_face_file_path)
-    unknown_picture_locations = face_recognition.face_locations(
-        unknown_picture)
-    unknown_face_encs = face_recognition.face_encodings(
-        unknown_picture, unknown_picture_locations)
+    origin_picture = cv2.imread(unknown_face_file_path)
+    face_picture = face_recognition.load_image_file(unknown_face_file_path)
+    face_locations = face_recognition.face_locations(
+        face_picture)
+    face_encodings = face_recognition.face_encodings(
+        face_picture, face_locations)
 
-    detected_indexes = []
-    for i in range(len(unknown_face_encs)):
-        matches = face_recognition.compare_faces(
-            know_face_encs, unknown_face_encs[i])
-        if True in matches:
-            first_index = matches.index(True)
-            if first_index not in detected_indexes:
-                results.append(know_faces[first_index].name)
-                detected_indexes.append(first_index)
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+        matches = face_recognition.compare_faces(know_face_encs, face_encoding)
+
+        name = "Unknown"
+
+        face_distances = face_recognition.face_distance(
+            know_face_encs, face_encoding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            name = know_faces[best_match_index].name
+
+        cv2.rectangle(origin_picture, (left, top),
+                      (right, bottom), (0, 0, 255), 2)
+
+        cv2.rectangle(origin_picture, (left, bottom - 35),
+                      (right, bottom), (0, 0, 255), cv2.FILLED)
+        font = cv2.FONT_HERSHEY_DUPLEX
+        cv2.putText(origin_picture, name, (left + 6, bottom - 6),
+                    font, 2.0, (255, 255, 255), 2)
+
+    cv2.imwrite("final.png", origin_picture)
 
     return results
 
@@ -76,11 +90,6 @@ async def upload_file(file: UploadFile = File(...)):
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
 
 
 # this code support serveo.net server
