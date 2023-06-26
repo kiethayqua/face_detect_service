@@ -6,6 +6,7 @@ import pathlib
 import os
 import cv2
 import numpy as np
+import uuid
 
 app = FastAPI()
 app.mount('/app/static', StaticFiles(directory="app/static"), name="static")
@@ -84,9 +85,10 @@ def detect_face(unknown_face_file_path: str):
         cv2.putText(origin_picture, name, (left + 6, bottom - 6),
                     font, 2.0, (255, 255, 255), 2)
 
-    cv2.imwrite("./app/static/final.png", origin_picture)
+    random_uuid = uuid.uuid4()
+    cv2.imwrite(f"./app/static/{random_uuid}.png", origin_picture)
 
-    return DetectedResponse(peoples, "http://0.0.0.0:80/app/static/final.png")
+    return DetectedResponse(peoples, f"https://appx.serveo.net/app/static/{random_uuid}.png")
 
 
 @app.post("/upload")
