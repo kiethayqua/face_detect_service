@@ -82,8 +82,10 @@ def detect_face(unknown_face_file_path: str):
         cv2.rectangle(origin_picture, (left, bottom - 35),
                       (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(origin_picture, name, (left + 6, bottom - 6),
-                    font, 2.0, (255, 255, 255), 2)
+        scale = (right - left) / 200
+        scaled_font_size = scale * 1.0
+        cv2.putText(origin_picture, name, (left, bottom - 6),
+                    font, scaled_font_size, (255, 255, 255), 1)
 
     random_uuid = uuid.uuid4()
     cv2.imwrite(f"./app/static/{random_uuid}.png", origin_picture)
