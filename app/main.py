@@ -22,11 +22,11 @@ class People(object):
 
 
 class DetectedResponse(object):
-    peoples = []
+    phones = []
     img = ""
 
-    def __init__(self, peoples, img):
-        self.peoples = peoples
+    def __init__(self, phones, img):
+        self.phones = phones
         self.img = img
 
 
@@ -37,7 +37,7 @@ know_face_encs = []
 def init():
     for child in pathlib.Path('./app/data').iterdir():
         face_image = face_recognition.load_image_file('./' + str(child))
-        face_name = os.path.splitext(str(child))[0]
+        face_name = os.path.splitext(str(child))[0].split('/')[-1]
         face_image_enc = face_recognition.face_encodings(face_image)[0]
         know_faces.append(People(face_name, face_image_enc))
 
@@ -55,7 +55,7 @@ init()
 
 
 def detect_face(unknown_face_file_path: str):
-    peoples = []
+    phones = []
 
     origin_picture = cv2.imread(unknown_face_file_path)
     face_picture = face_recognition.load_image_file(unknown_face_file_path)
@@ -74,7 +74,7 @@ def detect_face(unknown_face_file_path: str):
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
             name = know_faces[best_match_index].name
-            peoples.append(name)
+            phones.append(name)
 
         cv2.rectangle(origin_picture, (left, top),
                       (right, bottom), (0, 0, 255), 2)
@@ -88,7 +88,7 @@ def detect_face(unknown_face_file_path: str):
     random_uuid = uuid.uuid4()
     cv2.imwrite(f"./app/static/{random_uuid}.png", origin_picture)
 
-    return DetectedResponse(peoples, f"https://appx.serveo.net/app/static/{random_uuid}.png")
+    return DetectedResponse(phones, f"https://appx.serveo.net/app/static/{random_uuid}.png")
 
 
 @app.post("/upload")
