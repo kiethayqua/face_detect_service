@@ -27,12 +27,12 @@ class People(object):
 class DetectedResponse(object):
     phones = []
     img = "",
-    error_msg = 0
+    err_code = 0
 
-    def __init__(self, phones, img, error_msg=0):
+    def __init__(self, phones, img, err_code=0):
         self.phones = phones
         self.img = img
-        self.error_msg = error_msg
+        self.err_code = err_code
 
 
 know_faces = []
