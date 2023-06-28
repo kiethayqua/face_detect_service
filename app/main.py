@@ -99,10 +99,10 @@ def detect_face(unknown_face_file_path: str):
                     font, scaled_font_size, (255, 255, 255), 1)
 
     if (len(face_encodings) == 0):
-        return DetectedResponse([], "", error_msg=1)
+        return DetectedResponse([], "", 1)
 
     if (len(face_encodings) > 0 and len(matches) == 0):
-        return DetectedResponse([], "", error_msg=2)
+        return DetectedResponse([], "", 2)
 
     random_uuid = uuid.uuid4()
     cv2.imwrite(f"./app/static/{random_uuid}.png", origin_picture)
