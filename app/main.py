@@ -112,11 +112,16 @@ def detect_face(unknown_face_file_path: str):
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    with open(file.filename, 'wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        path_return = shutil.copy(file.filename, 'app/upload/')
-        os.remove(file.filename)
-        results = detect_face(path_return)
+    results = {}
+    try:
+        with open(file.filename, 'wb') as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            path_return = shutil.copy(file.filename, 'app/upload/')
+            os.remove(file.filename)
+            results = detect_face(path_return)
+    except Exception as e:
+        print(f"Exception: {e}")
+        results = DetectedResponse([], "", 3)
 
     return {"data": results}
 
