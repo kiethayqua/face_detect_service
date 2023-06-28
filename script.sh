@@ -13,5 +13,4 @@ docker rmi $(docker images -a -q)
 docker build -t backend-facedetect-app .
 
 # run docker image and expose server
-docker run -p 80:80 backend-facedetect-app & ssh -R appx:80:0.0.0.0:80 serveo.net
-
+docker run -p 80:80 backend-facedetect-app & ssh -o ServerAliveInterval=60 -R appx:80:0.0.0.0:80 serveo.net

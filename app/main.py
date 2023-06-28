@@ -7,9 +7,12 @@ import os
 import cv2
 import numpy as np
 import uuid
+from decouple import config
 
 app = FastAPI()
 app.mount('/app/static', StaticFiles(directory="app/static"), name="static")
+SERVER_IP = config("SERVER_IP")
+PORT = config("PORT")
 
 
 class People(object):
@@ -23,23 +26,31 @@ class People(object):
 
 class DetectedResponse(object):
     phones = []
-    img = ""
+    img = "",
+    err_code = 0
 
-    def __init__(self, phones, img):
+    def __init__(self, phones, img, err_code=0):
         self.phones = phones
         self.img = img
+        self.err_code = err_code
 
 
 know_faces = []
 know_face_encs = []
 
 
+def mask_phone_number(phone_number):
+    masked_number = '*' * (len(phone_number) - 4) + phone_number[-4:]
+    return masked_number
+
+
 def init():
     for child in pathlib.Path('./app/data').iterdir():
-        face_image = face_recognition.load_image_file('./' + str(child))
-        face_name = os.path.splitext(str(child))[0].split('/')[-1]
-        face_image_enc = face_recognition.face_encodings(face_image)[0]
-        know_faces.append(People(face_name, face_image_enc))
+        if str(child).find('.DS_Store') == -1:
+            face_image = face_recognition.load_image_file('./' + str(child))
+            face_name = os.path.splitext(str(child))[0].split('/')[-1]
+            face_image_enc = face_recognition.face_encodings(face_image)[0]
+            know_faces.append(People(face_name, face_image_enc))
 
     def get_encs():
         res = []
@@ -84,20 +95,33 @@ def detect_face(unknown_face_file_path: str):
         font = cv2.FONT_HERSHEY_DUPLEX
         scale = (right - left) / 200
         scaled_font_size = scale * 1.0
-        cv2.putText(origin_picture, name, (left, bottom - 6),
+        cv2.putText(origin_picture, mask_phone_number(name), (left, bottom - 6),
                     font, scaled_font_size, (255, 255, 255), 1)
+
+    if (len(face_encodings) == 0):
+        return DetectedResponse([], "", 1)
+
+    if (len(face_encodings) > 0 and len(matches) == 0):
+        return DetectedResponse([], "", 2)
 
     random_uuid = uuid.uuid4()
     cv2.imwrite(f"./app/static/{random_uuid}.png", origin_picture)
 
-    return DetectedResponse(phones, f"https://appx.serveo.net/app/static/{random_uuid}.png")
+    return DetectedResponse(phones, f"{SERVER_IP}:{PORT}/app/static/{random_uuid}.png")
 
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    with open(file.filename, 'wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        results = detect_face(file.filename)
+    results = {}
+    try:
+        with open(file.filename, 'wb') as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            path_return = shutil.copy(file.filename, 'app/upload/')
+            os.remove(file.filename)
+            results = detect_face(path_return)
+    except Exception as e:
+        print(f"Exception: {e}")
+        results = DetectedResponse([], "", 3)
 
     return {"data": results}
 
