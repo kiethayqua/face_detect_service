@@ -40,6 +40,7 @@ know_face_encs = []
 
 
 def mask_phone_number(phone_number):
+
     masked_number = '*' * (len(phone_number) - 4) + phone_number[-4:]
     return masked_number
 
@@ -78,7 +79,7 @@ def detect_face(unknown_face_file_path: str):
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         matches = face_recognition.compare_faces(know_face_encs, face_encoding)
 
-        name = "Unknown"
+        name = ""
 
         face_distances = face_recognition.face_distance(
             know_face_encs, face_encoding)
@@ -87,16 +88,15 @@ def detect_face(unknown_face_file_path: str):
             name = know_faces[best_match_index].name
             phones.append(name)
 
-        cv2.rectangle(origin_picture, (left, top),
-                      (right, bottom), (0, 0, 255), 2)
-
-        cv2.rectangle(origin_picture, (left, bottom - 35),
-                      (right, bottom), (0, 0, 255), cv2.FILLED)
-        font = cv2.FONT_HERSHEY_DUPLEX
-        scale = (right - left) / 200
-        scaled_font_size = scale * 1.0
-        cv2.putText(origin_picture, mask_phone_number(name), (left, bottom - 6),
-                    font, scaled_font_size, (255, 255, 255), 1)
+            cv2.rectangle(origin_picture, (left, top),
+                          (right, bottom), (0, 0, 255), 2)
+            scale = (right - left) / 200
+            cv2.rectangle(origin_picture, (left, (bottom - int(35*scale))),
+                          (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            scaled_font_size = scale * 1.0
+            cv2.putText(origin_picture, mask_phone_number(name), (left, bottom - 6),
+                        font, scaled_font_size, (255, 255, 255), 1)
 
     if (len(face_encodings) == 0):
         return DetectedResponse([], "", 1)
