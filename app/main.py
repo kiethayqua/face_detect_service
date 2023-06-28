@@ -115,7 +115,6 @@ async def upload_file(file: UploadFile = File(...)):
     with open(file.filename, 'wb') as buffer:
         shutil.copyfileobj(file.file, buffer)
         path_return = shutil.copy(file.filename, 'app/upload/')
-        print(path_return)
         os.remove(file.filename)
         results = detect_face(path_return)
 
