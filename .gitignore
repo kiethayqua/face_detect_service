@@ -1,2 +1,4 @@
 static/
 upload/
+data/
+__pycache__/
